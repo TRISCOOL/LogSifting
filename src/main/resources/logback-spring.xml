@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{80}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <property name="LOG_PATH" value="/Users/taoran/logs" />
+    <appender name="ErrorFile"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/error.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <MaxHistory>90</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{80}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="WarnFile"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/warn.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/warn.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <MaxHistory>90</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{80}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 时间滚动输出 level不为 error的其他日志 -->
+    <appender name="InfoFile"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/info.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>NEUTRAL</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/info.%d{yyyy-MM-dd}.log.zip</FileNamePattern>
+            <MaxHistory>90</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date [%thread] %-5level [%logger{80}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <!--discriminator鉴别器，根据taskId这个key对应的value鉴别日志事件，然后委托给具体appender写日志-->
+        <discriminator>
+            <key>taskId</key>
+            <defaultValue>default</defaultValue>
+        </discriminator>
+        <sift>
+            <!--具体的写日志appender，每一个taskId创建一个文件-->
+            <appender name="File-${taskId}" class="ch.qos.logback.core.FileAppender">
+                <file>${LOG_PATH}/${taskId}</file>
+                <append>true</append>
+                <encoder charset="UTF-8">
+                    <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5level %logger{35} - %msg%n</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+
+    <appender name="deserializeLogAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${LOG_PATH}/deserializeDataInfo.log</file>
+        <!--日志文件输出格式-->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/deserializeDataInfo-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!--日志文件保留天数-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="Console" />
+        <appender-ref ref="ErrorFile"/>
+        <appender-ref ref="InfoFile"/>
+        <appender-ref ref="WarnFile"/>
+        <appender-ref ref="SIFT"/>
+    </root>
+
+    <logger name="testLog" additivity="false" level="INFO">
+        <appender-ref ref="deserializeLogAppender"/>
+    </logger>
+</configuration>
+
